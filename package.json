@@ -1,0 +1,25 @@
+{
+  "name": "shadowdex-escrow",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "seed": "node prisma/seed.cjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "ethers": "^6.13.4",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "prisma": "^5.16.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.cjs"
+  }
+}

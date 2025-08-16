@@ -1,0 +1,60 @@
+// ------------------------------
+// prisma/schema.prisma
+// ------------------------------
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum DealStatus {
+  INIT
+  LOCKED
+  CRYPTO_VERIFIED
+  PENDING_RELEASE
+  RELEASING
+  DISPUTE
+  RELEASED
+  REFUNDED
+}
+
+model deal {
+  id             BigInt      @id @default(autoincrement())
+  fiatAmount     Decimal     @db.Decimal(18, 2)
+  cashRefHash    String      @unique @db.VarChar(128) // HMAC of MoMo reference
+  status         DealStatus  @default(INIT)
+
+  releaseAt      DateTime?
+  oracleSig      String?     @db.VarChar(132) // 0x + 130
+  releaseTxHash  String?     @db.VarChar(66)  // 0x + 64
+  releaseError   String?
+  releasedAt     DateTime?
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  eventLogs      dealEventLog[]
+
+  @@index([status])
+  @@index([releaseAt])
+  @@index([releaseTxHash])
+  @@index([status, releaseAt])
+}
+
+model dealEventLog {
+  id          BigInt   @id @default(autoincrement())
+  dealId      BigInt
+  type        String
+  idempotency String
+  actor       String
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  deal        deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, idempotency])
+  @@index([dealId, createdAt])
+}
