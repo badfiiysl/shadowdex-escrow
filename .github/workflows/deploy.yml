@@ -12,6 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug SSH connectivity (-vvv)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          echo "$SSH_PRIVATE_KEY" > key
+          chmod 600 key
+          # quick TCP probe
+          timeout 5 bash -c "cat < /dev/null > /dev/tcp/${SSH_HOST}/22" || { echo "Port 22 closed"; exit 1; }
+          # raw SSH (ignore host key just for this debug step)
+          ssh -vvv -i key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "echo OK"
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1
         with:
