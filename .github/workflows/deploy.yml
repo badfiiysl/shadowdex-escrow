@@ -18,17 +18,20 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Optional but recommended: pin host key to avoid "Host key verification failed"
-          # host_fingerprint: "SHA256:PUT_YOUR_SERVER_ED25519_FP_HERE"
+          # Optional: pin server host key to avoid host key verification issues.
+          # Get it on the server with: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256
+          # host_fingerprint: "SHA256:PUT_YOUR_SERVER_FP_HERE"
           script: |
             set -euo pipefail
             cd /opt/shadowdex-escrow
             git fetch --all
             git reset --hard origin/main
+
             if [ -f package.json ]; then
               npm ci || npm install
               npx prisma generate || true
             fi
+
             if command -v pm2 >/dev/null 2>&1; then
               pm2 start npm --name shadowdex-escrow -- start || pm2 restart shadowdex-escrow
               pm2 save
